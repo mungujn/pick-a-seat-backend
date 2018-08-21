@@ -1,0 +1,5 @@
+node_modules/
+coverage/
+.vscode/
+common-code/node_modules
+common-code/admin-scripts.js

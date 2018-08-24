@@ -1,7 +1,7 @@
 {
   "name": "common-code",
   "version": "0.1.0",
-  "description": "Pamoja wallet common source code",
+  "description": "Pick a seat common code",
   "main": "common.js",
   "directories": {
     "test": "tests"
@@ -16,6 +16,7 @@
   "author": "Mungujakisa Nickson",
   "license": "ISC",
   "dependencies": {
+    "csvtojson": "^2.0.8",
     "dotenv": "^6.0.0",
     "firebase-admin": "^5.12.1",
     "node-fetch": "^2.1.2",

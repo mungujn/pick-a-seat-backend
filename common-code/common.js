@@ -5,11 +5,11 @@ const uuidv4 = require("uuid/v4");
 const crud = require("./crud");
 const responses = require("./responses");
 
-const BASE = "dev-"
+// const BASE = "";
 // constants
 const C = {
     // root level nodes
-    
+    EVENTS: "events"
 };
 
 // get the current time (on the server)
@@ -38,9 +38,4 @@ module.exports.createData = crud.createData;
 module.exports.readData = crud.readData;
 module.exports.updateData = crud.updateData;
 module.exports.deleteData = crud.deleteData;
-module.exports.getCollectionsIn = crud.getCollectionsIn;
-module.exports.createDataWithAutoID = crud.createDataWithAutoID;
-module.exports.deleteCollection = crud.deleteCollection;
-
-// email
-module.exports.sendValidationEmail = email.sendValidationEmail;
+module.exports.getAllDocuments = crud.getAllDocuments;

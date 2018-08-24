@@ -1,6 +1,5 @@
 // create, read, update and delete database operations
 const admin = require("firebase-admin");
-const local_admin = require("./admin")
 
 // get the db object/connection
 function getDB() {
@@ -226,14 +225,49 @@ async function deleteData(location) {
     }
 }
 
+// read all documents from a collection
+// location is an address to a document, returns js object with data
+async function getAllDocuments(location) {
+    let nests = location.split("/");
+    let db = getDB();
+    let ref;
+    let snapshot;
+    let data = [];
+    switch (nests.length) {
+        case 1:
+            console.log(`Reading all data in collection ${nests[0]}`);
+            snapshot = await db.collection(nests[0]).get();
+            snapshot.forEach(doc => {
+                data.push(doc.data());
+            });
+            console.log("Read complete");
+            return data;
+        case 3:
+            console.log(
+                `Reading data in sub collection ${nests[2]} of document ${
+                    nests[1]
+                } in collection ${nests[0]}`
+            );
+            ref = db
+                .collection(nests[0])
+                .doc(nests[1])
+                .collection(nests[2]);
+            snapshot = await ref.get();
+            snapshot.forEach(doc => {
+                data.push({
+                    id: doc.id,
+                    data: doc.data()
+                });
+            });
+            console.log("Read complete");
+            return data;
+    }
+}
+
 // exports
 module.exports.getDB = getDB;
 module.exports.createData = createData;
 module.exports.readData = readData;
 module.exports.updateData = updateData;
 module.exports.deleteData = deleteData;
-
-// exports from the custom admin.js file
-module.exports.deleteCollection = local_admin.deleteCollection
-module.exports.getCollectionsIn = local_admin.getCollectionsIn;
-module.exports.createDataWithAutoID = local_admin.createDataWithAutoID;
+module.exports.getAllDocuments = getAllDocuments;

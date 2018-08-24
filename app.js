@@ -2,8 +2,9 @@
 const express = require("express");
 var bodyParser = require("body-parser");
 const common = require("./common-code/common");
-const auth = require("./common-code/authentication");
 const backend = require("./backend");
+const auth = require("./common-code/guests.js");
+const AUTH_ARRAY = auth.CACHED_AUTH;
 var app = express();
 var cors = require("cors");
 
@@ -12,93 +13,130 @@ require("dotenv").load();
 var allowed_origins = [
     "http://localhost:3000",
     "http://localhost:5000",
-    "https://pamoja-wallet.firebaseapp.com"
+    "https://pick-a-seat.firebaseapp.com"
 ];
 
 app.use(
     cors({
-        origin: allowed_origins,
-        exposedHeaders: ["Authorization"]
+        origin: allowed_origins
     })
 ); // cors config
 app.use(bodyParser.json());
-app.post("/add", auth.authorize, handleAdd);
-app.post("/begin-email-validation", beginEmailValidation);
-app.post("/complete-email-validation", completeEmailValidation);
-app.post("/edit", auth.authorize, handleEdit);
-app.post("/remove", auth.authorize, handleRemove);
+app.post("/pick-a-seat", authenticateCustomer, pickASeat);
+app.post("/check-seat-states", checkSeatStates);
 
-async function handleAdd(request, response) {
+async function pickASeat(request, response) {
     try {
-        console.log("Adding account");
-        let account = request.body;
-        let id = await backend.addAccount(account);
-        console.log("Succeded in adding account");
-        common.respondOK(response, id);
-    } catch (error) {
-        console.log("Failed to add account");
-        common.respondISE(response, error);
-    }
-}
-
-async function beginEmailValidation(request, response) {
-    try {
-        console.log("Sending validation email");
-        let account = request.body;
-        let id = await backend.beginEmailValidation(
-            account.req_uid,
-            account.validation_code
-        );
-        console.log("Succeded in sending validation email");
-        common.respondOK(response, id);
-    } catch (error) {
-        console.log("Failed to send validation email");
-        common.respondISE(response, error);
-    }
-}
-
-async function completeEmailValidation(request, response) {
-    try {
-        console.log("Completing email validation");
-        let req_body = request.body;
-        let result = await backend.completeEmailValidation(req_body.uid, req_body.code);
-        if (result === common.CONSTANTS.SUCCESSFUL) {
-            console.log("Succeded in completing email validation");
-            common.respondOK(response, result);
+        console.log("Picking a seat");
+        let seat = request.body;
+        seat["customer"].is_couple = getIsCouple(seat);
+        if (validateSeatData(seat) === true) {
+            let result = await backend.pickASeat(seat);
+            if (result === true) {
+                console.log(
+                    `Successfuly picked seat ${seat.seat_number} from table ${
+                        seat.table_number
+                    }`
+                );
+                console.log("-----------------------------------");
+                common.respondOK(response, true);
+            } else {
+                console.log("Failed to pick a seat, customer error");
+                console.log("-----------------------------------");
+                common.respondBR(response, result);
+            }
         } else {
-            console.log("Failed to complete email validation");
-            common.respondBR(response, result);
+            common.respondBR(response, "Invalid seat data");
         }
     } catch (error) {
-        console.log("Failed to complete email validation");
+        console.log("Failed to pick a seat");
+        console.log("-----------------------------------");
         common.respondISE(response, error);
     }
 }
 
-async function handleEdit(request, response) {
+function validateSeatData(seat) {
+    console.log("Validating:", seat);
+    let customer = seat.customer;
+    if (
+        customer.is_couple !== undefined &&
+        customer.ticket_number !== undefined &&
+        customer.email_address !== undefined &&
+        seat.table !== undefined &&
+        seat.seat !== undefined
+    ) {
+        return true;
+    }
+    return false;
+}
+
+// check seat states
+async function checkSeatStates(request, response) {
     try {
-        console.log("Editing account");
-        let account = request.body;
-        let id = await backend.editAccount(account);
-        console.log("Succeded in editing account");
-        common.respondOK(response, id);
+        console.log("Checking seat states");
+        let table = request["body"].table;
+        let seats_states = await backend.checkSeatStates(table);
+        console.log("Succeded in checking seat states");
+        console.log("-----------------------------------");
+
+        common.respondOK(response, seats_states);
     } catch (error) {
-        console.log("Failed to edit account");
+        console.log("Failed to check seat states");
+        console.log("-----------------------------------");
+
         common.respondISE(response, error);
     }
 }
 
-async function handleRemove(request, response) {
-    try {
-        console.log("Removing account");
-        let account = request.body;
-        let id = await backend.removeAccount(account);
-        console.log("Succeded in removing account");
-        common.respondOK(response, id);
-    } catch (error) {
-        console.log("Failed to remove account");
-        common.respondISE(response, error);
+// authenticate customer
+// assuming basic token based authentication.
+function authenticateCustomer(request, response, next) {
+    console.log("-----------Request-------------");
+    console.log("Authenticating customer");
+    let parsed_request = request.body;
+    let customer = parsed_request.customer;
+    let email_address = customer.email_address;
+    let ticket_number = customer.ticket_number;
+
+    if (verify(email_address, ticket_number)) {
+        console.log("Customer authenticated");
+        return next();
+    } else {
+        console.log("Authentication failed");
+        console.log("-------------------------------");
+        response.status(401);
+        return response.send();
     }
+}
+
+function verify(email_address, ticket_number) {
+    for (let i = 0; i < AUTH_ARRAY.length; i++) {
+        let pair = AUTH_ARRAY[i];
+        if (
+            email_address === pair.email_address &&
+            ticket_number === pair.ticket_number
+        ) {
+            return true;
+        }
+    }
+    return false;
+}
+
+function getIsCouple(seat) {
+    let email_address = seat["customer"].email_address;
+    let ticket_number = seat["customer"].ticket_number;
+    for (let i = 0; i < AUTH_ARRAY.length; i++) {
+        let pair = AUTH_ARRAY[i];
+        if (
+            email_address === pair.email_address &&
+            ticket_number === pair.ticket_number
+        ) {
+            if (pair.is_couple !== undefined) {
+                return true;
+            }
+        }
+    }
+    return false;
 }
 
 module.exports = app;

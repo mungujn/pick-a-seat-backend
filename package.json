@@ -1,7 +1,7 @@
 {
-  "name": "contacts-service",
+  "name": "api",
   "version": "0.1.0",
-  "description": "Pamoja wallet contacts service",
+  "description": "API for the pick a seat app",
   "main": "service.js",
   "directories": {
     "test": "tests"
@@ -12,7 +12,14 @@
   },
   "jest": {
     "verbose": true,
-    "testEnvironment": "node"
+    "testEnvironment": "node",
+    "collectCoverageFrom": [
+      "common.js",
+      "crud.js",
+      "app.js",
+      "backend.js",
+      "service.js"
+    ]
   },
   "author": "Mungujakisa Nickson",
   "license": "ISC",

@@ -30,6 +30,7 @@ async function pickASeat(request, response) {
         console.log("Picking a seat");
         let seat = request.body;
         seat["customer"].is_couple = getIsCouple(seat);
+        seat["customer"].name = getName(seat);
         if (validateSeatData(seat) === true) {
             let result = await backend.pickASeat(seat);
             if (result === true) {
@@ -137,6 +138,24 @@ function getIsCouple(seat) {
         }
     }
     return false;
+}
+
+function getName(seat) {
+    let email_address = seat["customer"].email_address;
+    let ticket_number = seat["customer"].ticket_number;
+    for (let i = 0; i < AUTH_ARRAY.length; i++) {
+        let pair = AUTH_ARRAY[i];
+        if (
+            email_address === pair.email_address &&
+            ticket_number === pair.ticket_number
+        ) {
+            if (pair.name !== undefined) {
+                return pair.name;
+            } 
+            
+        }
+    }
+    return "";
 }
 
 module.exports = app;

@@ -128,7 +128,13 @@ async function checkSeatStates(table_name) {
         if (x["data"].ticket_number === undefined) {
             seat_states[x.id].ticket_number = "";
         } else {
-            seat_states[x.id].ticket_number = x["data"].ticket_number;
+            if (x["data"]["customer"].name !== undefined) {
+                seat_states[x.id].ticket_number = `${
+                    x["data"].ticket_number
+                } , ${x["data"]["customer"].name}`;
+            } else {
+                seat_states[x.id].ticket_number = x["data"].ticket_number;
+            }
         }
         if (x["data"].taken === undefined) {
             seat_states[x.id].taken = false;
@@ -200,10 +206,10 @@ async function tallyCustomersSeatSelection(seat) {
         }
     }
     customers_seats.number = customers_seats.number + 1;
-     if (customers_seats.number === 3){
+    if (customers_seats.number === 3) {
         customers_seats.number = 1;
         customers_seats["seats"] = [];
-     }
+    }
     customers_seats["seats"].push({
         seat: seat.seat,
         table: seat.table

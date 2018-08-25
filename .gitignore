@@ -3,3 +3,7 @@ coverage/
 .vscode/
 common-code/node_modules
 common-code/admin-scripts.js
+.env
+common-code/.env
+common-code/guests.csv
+common-code/guests.js

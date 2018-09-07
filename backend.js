@@ -1,4 +1,4 @@
-const common = require("./common-code/common");
+const common = require('./common-code/functions');
 const C = common.CONSTANTS;
 
 async function pickASeat(seat) {
@@ -13,7 +13,7 @@ async function pickASeat(seat) {
         is_couple_ticket === false
     ) {
         console.info(
-            "**\nSeat is empty and customer has not picked a seat yet\n**"
+            '**\nSeat is empty and customer has not picked a seat yet\n**'
         );
         return await assignSeat(seat);
     }
@@ -25,7 +25,7 @@ async function pickASeat(seat) {
         is_couple_ticket === false
     ) {
         console.info(
-            "**\nseat is empty and customer has previously picked a seat\n**"
+            '**\nseat is empty and customer has previously picked a seat\n**'
         );
         let requesters_old_seats = await getRequestersOldSeats(seat.customer);
         for (let i = 0; i < requesters_old_seats.length; i++) {
@@ -41,7 +41,7 @@ async function pickASeat(seat) {
         number_of_seats === 0
     ) {
         console.info(
-            "**\nSeat is empty and couple has picked no seats already\n**"
+            '**\nSeat is empty and couple has picked no seats already\n**'
         );
         return await assignSeat(seat);
     }
@@ -53,7 +53,7 @@ async function pickASeat(seat) {
         number_of_seats === 1
     ) {
         console.info(
-            "**\nSeat is empty and couple has picked 1 seat already\n**"
+            '**\nSeat is empty and couple has picked 1 seat already\n**'
         );
         return await assignSeat(seat);
     }
@@ -65,7 +65,7 @@ async function pickASeat(seat) {
         number_of_seats === 2
     ) {
         console.info(
-            "**\nSeat is empty and couple has picked 2 seats already\n**"
+            '**\nSeat is empty and couple has picked 2 seats already\n**'
         );
         let requesters_old_seats = await getRequestersOldSeats(seat.customer);
         for (let i = 0; i < requesters_old_seats.length; i++) {
@@ -73,7 +73,7 @@ async function pickASeat(seat) {
         }
         return await assignSeat(seat);
     }
-    return "Error: Seat taken";
+    return 'Error: Seat taken';
 }
 
 function getTicketType(customer) {
@@ -91,8 +91,8 @@ async function makeSeatEmpty(seat) {
         seat_data = {};
     }
     seat_data.taken = false;
-    seat_data.ticket_number = "";
-    seat_data.email_address = "";
+    seat_data.ticket_number = '';
+    seat_data.email_address = '';
     await common.updateData(
         `events/obuc-dinner/${seat.table}/${seat.seat}`,
         seat_data
@@ -110,36 +110,36 @@ async function getRequestersOldSeats(customer) {
 async function checkSeatStates(table_name) {
     let seat_states = [
         {},
-        { taken: false, ticket_number: "" },
-        { taken: false, ticket_number: "" },
-        { taken: false, ticket_number: "" },
-        { taken: false, ticket_number: "" },
-        { taken: false, ticket_number: "" },
-        { taken: false, ticket_number: "" },
-        { taken: false, ticket_number: "" },
-        { taken: false, ticket_number: "" },
-        { taken: false, ticket_number: "" },
-        { taken: false, ticket_number: "" }
+        { taken: false, ticket_number: '' },
+        { taken: false, ticket_number: '' },
+        { taken: false, ticket_number: '' },
+        { taken: false, ticket_number: '' },
+        { taken: false, ticket_number: '' },
+        { taken: false, ticket_number: '' },
+        { taken: false, ticket_number: '' },
+        { taken: false, ticket_number: '' },
+        { taken: false, ticket_number: '' },
+        { taken: false, ticket_number: '' }
     ];
     let data = await common.getAllDocuments(`events/obuc-dinner/${table_name}`);
-    console.log("Data", data);
+    console.log('Data', data);
     for (let i = 0; i < data.length; i++) {
         let x = data[i];
-        if (x["data"].ticket_number === undefined) {
-            seat_states[x.id].ticket_number = "";
+        if (x['data'].ticket_number === undefined) {
+            seat_states[x.id].ticket_number = '';
         } else {
-            if (x["data"]["customer"].name !== undefined) {
+            if (x['data']['customer'].name !== undefined) {
                 seat_states[x.id].ticket_number = `${
-                    x["data"].ticket_number
-                } , ${x["data"]["customer"].name}`;
+                    x['data'].ticket_number
+                } , ${x['data']['customer'].name}`;
             } else {
-                seat_states[x.id].ticket_number = x["data"].ticket_number;
+                seat_states[x.id].ticket_number = x['data'].ticket_number;
             }
         }
-        if (x["data"].taken === undefined) {
+        if (x['data'].taken === undefined) {
             seat_states[x.id].taken = false;
         } else {
-            seat_states[x.id].taken = x["data"].taken;
+            seat_states[x.id].taken = x['data'].taken;
         }
     }
     return seat_states;
@@ -164,7 +164,7 @@ async function seatIsTaken(seat) {
 async function assignSeat(seat) {
     /**/
     seat.taken = true;
-    seat.ticket_number = seat["customer"].ticket_number;
+    seat.ticket_number = seat['customer'].ticket_number;
     await common.updateData(
         `events/obuc-dinner/${seat.table}/${seat.seat}`,
         seat
@@ -190,33 +190,33 @@ async function numberOfSeats(customer) {
 async function tallyCustomersSeatSelection(seat) {
     let customers_seats = {};
     customers_seats = await common.readData(
-        `events/obuc-dinner-tickets/${seat["customer"].ticket_number}/seats`
+        `events/obuc-dinner-tickets/${seat['customer'].ticket_number}/seats`
     );
     if (customers_seats === undefined) {
         customers_seats = {};
         customers_seats.number = 0;
-        customers_seats["seats"] = [];
+        customers_seats['seats'] = [];
     } else {
         let is_couple_ticket = await getTicketType(seat.customer);
 
         if (is_couple_ticket === false) {
             customers_seats = {};
             customers_seats.number = 0;
-            customers_seats["seats"] = [];
+            customers_seats['seats'] = [];
         }
     }
     customers_seats.number = customers_seats.number + 1;
     if (customers_seats.number === 3) {
         customers_seats.number = 1;
-        customers_seats["seats"] = [];
+        customers_seats['seats'] = [];
     }
-    customers_seats["seats"].push({
+    customers_seats['seats'].push({
         seat: seat.seat,
         table: seat.table
     });
-    console.log("Updating customers seats to: ", customers_seats);
+    console.log('Updating customers seats to: ', customers_seats);
     await common.updateData(
-        `events/obuc-dinner-tickets/${seat["customer"].ticket_number}/seats`,
+        `events/obuc-dinner-tickets/${seat['customer'].ticket_number}/seats`,
         customers_seats
     );
 }
@@ -229,10 +229,10 @@ async function seatIsTakenByRequester(seat) {
         return false;
     } else {
         if (
-            seat["customer"].email_address ===
-                seat_data["customer"].email_address &&
-            seat["customer"].ticket_number ===
-                seat_data["customer"].ticket_number
+            seat['customer'].email_address ===
+                seat_data['customer'].email_address &&
+            seat['customer'].ticket_number ===
+                seat_data['customer'].ticket_number
         ) {
             return true;
         }

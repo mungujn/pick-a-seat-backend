@@ -1,5 +1,7 @@
-const common = require('./common-code/functions');
-const C = common.CONSTANTS;
+const common = require('./common/functions');
+const utils = require('./common/utils');
+const log = require('./common/logger');
+const db = require('./common/database');
 
 async function pickASeat(seat) {
     let number_of_seats = await numberOfSeats(seat.customer);
@@ -12,7 +14,7 @@ async function pickASeat(seat) {
         number_of_seats === 0 &&
         is_couple_ticket === false
     ) {
-        console.info(
+        log.info(
             '**\nSeat is empty and customer has not picked a seat yet\n**'
         );
         return await assignSeat(seat);
@@ -24,7 +26,7 @@ async function pickASeat(seat) {
         number_of_seats === 1 &&
         is_couple_ticket === false
     ) {
-        console.info(
+        log.info(
             '**\nseat is empty and customer has previously picked a seat\n**'
         );
         let requesters_old_seats = await getRequestersOldSeats(seat.customer);
@@ -40,7 +42,7 @@ async function pickASeat(seat) {
         is_couple_ticket === true &&
         number_of_seats === 0
     ) {
-        console.info(
+        log.info(
             '**\nSeat is empty and couple has picked no seats already\n**'
         );
         return await assignSeat(seat);
@@ -52,7 +54,7 @@ async function pickASeat(seat) {
         is_couple_ticket === true &&
         number_of_seats === 1
     ) {
-        console.info(
+        log.info(
             '**\nSeat is empty and couple has picked 1 seat already\n**'
         );
         return await assignSeat(seat);
@@ -64,7 +66,7 @@ async function pickASeat(seat) {
         is_couple_ticket === true &&
         number_of_seats === 2
     ) {
-        console.info(
+        log.info(
             '**\nSeat is empty and couple has picked 2 seats already\n**'
         );
         let requesters_old_seats = await getRequestersOldSeats(seat.customer);
@@ -84,7 +86,7 @@ function getTicketType(customer) {
 }
 
 async function makeSeatEmpty(seat) {
-    let seat_data = await common.readData(
+    let seat_data = await db.readData(
         `events/obuc-dinner/${seat.table}/${seat.seat}`
     );
     if (seat_data === undefined) {
@@ -93,14 +95,14 @@ async function makeSeatEmpty(seat) {
     seat_data.taken = false;
     seat_data.ticket_number = '';
     seat_data.email_address = '';
-    await common.updateData(
+    await db.updateData(
         `events/obuc-dinner/${seat.table}/${seat.seat}`,
         seat_data
     );
 }
 
 async function getRequestersOldSeats(customer) {
-    let seat_data = await common.readData(
+    let seat_data = await db.readData(
         `events/obuc-dinner-tickets/${customer.ticket_number}/seats`
     );
     let seats = seat_data.seats;
@@ -121,8 +123,8 @@ async function checkSeatStates(table_name) {
         { taken: false, ticket_number: '' },
         { taken: false, ticket_number: '' }
     ];
-    let data = await common.getAllDocuments(`events/obuc-dinner/${table_name}`);
-    console.log('Data', data);
+    let data = await db.getAllDocuments(`events/obuc-dinner/${table_name}`);
+    log.log('Data', data);
     for (let i = 0; i < data.length; i++) {
         let x = data[i];
         if (x['data'].ticket_number === undefined) {
@@ -146,17 +148,17 @@ async function checkSeatStates(table_name) {
 }
 
 async function seatIsTaken(seat) {
-    console.log(
+    log.log(
         `Checking if seat ${seat.seat} on table ${seat.table} is taken`
     );
-    let seat_data = await common.readData(
+    let seat_data = await db.readData(
         `events/obuc-dinner/${seat.table}/${seat.seat}`
     );
     if (seat_data === undefined) {
-        console.log(`Seat is not yet assigned`);
+        log.log(`Seat is not yet assigned`);
         return false;
     } else {
-        console.log(`Seat taken state is ${seat_data.taken}`);
+        log.log(`Seat taken state is ${seat_data.taken}`);
         return seat_data.taken;
     }
 }
@@ -165,7 +167,7 @@ async function assignSeat(seat) {
     /**/
     seat.taken = true;
     seat.ticket_number = seat['customer'].ticket_number;
-    await common.updateData(
+    await db.updateData(
         `events/obuc-dinner/${seat.table}/${seat.seat}`,
         seat
     );
@@ -176,7 +178,7 @@ async function assignSeat(seat) {
 
 async function numberOfSeats(customer) {
     /**/
-    let seats = await common.readData(
+    let seats = await db.readData(
         `events/obuc-dinner-tickets/${customer.ticket_number}/seats`
     );
     if (seats === undefined) {
@@ -189,7 +191,7 @@ async function numberOfSeats(customer) {
 
 async function tallyCustomersSeatSelection(seat) {
     let customers_seats = {};
-    customers_seats = await common.readData(
+    customers_seats = await db.readData(
         `events/obuc-dinner-tickets/${seat['customer'].ticket_number}/seats`
     );
     if (customers_seats === undefined) {
@@ -214,15 +216,15 @@ async function tallyCustomersSeatSelection(seat) {
         seat: seat.seat,
         table: seat.table
     });
-    console.log('Updating customers seats to: ', customers_seats);
-    await common.updateData(
+    log.log('Updating customers seats to: ', customers_seats);
+    await db.updateData(
         `events/obuc-dinner-tickets/${seat['customer'].ticket_number}/seats`,
         customers_seats
     );
 }
 
 async function seatIsTakenByRequester(seat) {
-    let seat_data = await common.readData(
+    let seat_data = await db.readData(
         `events/obuc-dinner/${seat.table}/${seat.seat}`
     );
     if (seat_data === undefined) {

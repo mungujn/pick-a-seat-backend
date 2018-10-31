@@ -1,37 +1,37 @@
-const backend = require("../backend");
-const common = require("../common-code/common");
-const request = require("supertest");
-const app = require("../app");
+const backend = require('../backend');
+const common = require('../common-code/common');
+const request = require('supertest');
+const app = require('../app');
 
 jest.setTimeout(60000);
 
-describe("API", () => {
+describe('API', () => {
     // Seat is empty and customer has not picked a seat yet
     // pickASeat
-    test("Seat is empty and customer has not picked a seat yet", async () => {
+    test('Seat is empty and customer has not picked a seat yet', async () => {
         // prepare
         await common.deleteData(`events/obuc-dinner/table-t/1`);
         await common.deleteData(`events/obuc-dinner-tickets/1/seats`);
         // test
         let response = await request(app)
-            .post("/pick-a-seat")
+            .post('/pick-a-seat')
             .send({
-                table: "table-t",
-                seat: "1",
+                table: 'table-t',
+                seat: '1',
                 customer: {
-                    ticket_number: "1",
-                    email_address: "test@gmail.com"
+                    ticket_number: '1',
+                    email_address: 'test@gmail.com'
                 }
             });
 
-        let object = response["body"].message;
+        let object = response['body'].message;
         console.log(object);
         // assert
         expect(object).toBe(true);
     });
 
     //pickASeat
-    test("seat is empty and customer has previously picked a seat", async () => {
+    test('seat is empty and customer has previously picked a seat', async () => {
         // prepare
         await common.deleteData(`events/obuc-dinner/table-t/1`);
         await common.createData(`events/obuc-dinner/table-t/2`, {
@@ -41,20 +41,20 @@ describe("API", () => {
             number: 1,
             seats: [
                 {
-                    table: "table-t",
-                    seat: "2"
+                    table: 'table-t',
+                    seat: '2'
                 }
             ]
         });
         // test
         let response = await request(app)
-            .post("/pick-a-seat")
+            .post('/pick-a-seat')
             .send({
-                table: "table-t",
-                seat: "1",
+                table: 'table-t',
+                seat: '1',
                 customer: {
-                    ticket_number: "1",
-                    email_address: "test@gmail.com"
+                    ticket_number: '1',
+                    email_address: 'test@gmail.com'
                 }
             });
 
@@ -62,168 +62,172 @@ describe("API", () => {
         let data = await common.readData(`events/obuc-dinner-tickets/1/seats`);
         expect(data.number).toEqual(1);
         expect(data.seats).toHaveLength(1);
-        expect(data["seats"][0]).toEqual({
-            table: "table-t",
-            seat: "1"
+        expect(data['seats'][0]).toEqual({
+            table: 'table-t',
+            seat: '1'
         });
         let old_seat = await common.readData(`events/obuc-dinner/table-t/2`);
         expect(old_seat.taken).toBe(false);
-        let object = response["body"].message;
+        let object = response['body'].message;
         expect(object).toBe(true);
     });
 
     //pickASeat
     // seat is empty and couple has picked no seats already
-    test("Seat is empty and couple has picked no seats already", async () => {
+    test('Seat is empty and couple has picked no seats already', async () => {
         // prepare
         await common.deleteData(`events/obuc-dinner/table-t/2`);
         await common.deleteData(`events/obuc-dinner-tickets/2/seats`);
         // test
         let response = await request(app)
-            .post("/pick-a-seat")
+            .post('/pick-a-seat')
             .send({
-                table: "table-t",
-                seat: "2",
+                table: 'table-t',
+                seat: '2',
                 customer: {
-                    ticket_number: "2",
-                    email_address: "test2@gmail.com",
+                    ticket_number: '2',
+                    email_address: 'test2@gmail.com',
                     is_couple: true
                 }
             });
 
-        let object = response["body"].message;
+        let object = response['body'].message;
         console.log(object);
         // assert
         expect(object).toBe(true);
     });
 
     // seat is empty and couple has picked 1 seat already
-    test("seat is empty and couple has picked 1 seat already", async () => {
+    test('seat is empty and couple has picked 1 seat already', async () => {
         // prepare
         await common.deleteData(`events/obuc-dinner/table-t/3`);
         await common.createData(`events/obuc-dinner-tickets/2/seats`, {
             number: 1,
             seats: [
                 {
-                    table: "table-t",
-                    seat: "2"
+                    table: 'table-t',
+                    seat: '2'
                 }
             ]
         });
 
         // test
         let response = await request(app)
-            .post("/pick-a-seat")
+            .post('/pick-a-seat')
             .send({
-                table: "table-t",
-                seat: "3",
+                table: 'table-t',
+                seat: '3',
                 customer: {
-                    ticket_number: "2",
-                    email_address: "test2@gmail.com",
+                    ticket_number: '2',
+                    email_address: 'test2@gmail.com',
                     is_couple: true
                 }
             });
 
         // assert
         let data = await common.readData(`events/obuc-dinner-tickets/2/seats`);
-        expect(data["number"]).toEqual(2);
-        expect(data["seats"].length).toEqual(2);
-        let object = response["body"].message;
+        expect(data['number']).toEqual(2);
+        expect(data['seats'].length).toEqual(2);
+        let object = response['body'].message;
         expect(object).toBe(true);
     });
 
     // seat is empty and couple has picked 2 seats already
-    test("seat is empty and couple has picked 2 seats already", async () => {
+    test('seat is empty and couple has picked 2 seats already', async () => {
         // prepare
         await common.deleteData(`events/obuc-dinner/table-t/4`);
         await common.createData(`events/obuc-dinner-tickets/2/seats`, {
             number: 2,
             seats: [
                 {
-                    table: "table-t",
-                    seat: "2"
+                    table: 'table-t',
+                    seat: '2'
                 },
                 {
-                    table: "table-t",
-                    seat: "3"
+                    table: 'table-t',
+                    seat: '3'
                 }
             ]
         });
         // test
         let response = await request(app)
-            .post("/pick-a-seat")
+            .post('/pick-a-seat')
             .send({
-                table: "table-t",
-                seat: "4",
+                table: 'table-t',
+                seat: '4',
                 customer: {
-                    ticket_number: "2",
-                    email_address: "test2@gmail.com",
+                    ticket_number: '2',
+                    email_address: 'test2@gmail.com',
                     is_couple: true
                 }
             });
         // assert
         let data = await common.readData(`events/obuc-dinner-tickets/2/seats`);
-        expect(data["number"]).toEqual(1);
-        expect(data["seats"].length).toEqual(1);
-        let object = response["body"].message;
+        expect(data['number']).toEqual(1);
+        expect(data['seats'].length).toEqual(1);
+        let object = response['body'].message;
         expect(object).toBe(true);
     });
 
     // checkSeatStates
-    test("Gets table seats", async () => {
+    test('Gets table seats', async () => {
         // prepare
 
         // test
         let response = await request(app)
-            .post("/check-seat-states")
+            .post('/check-seat-states')
             .send({
-                table: "table-t"
+                table: 'table-t'
             });
 
-        let object = response["body"].message;
+        let object = response['body'].message;
         console.log(object);
         // assert
         expect(object.length).toBeGreaterThanOrEqual(3);
     });
+
+    afterAll('After all', ()=>{
+        process.exit()
+    });
 });
 
-describe.skip("Unit tests", () => {
+describe('Unit tests', () => {
     //seatIsTaken
-    test("Seat taken by someone else", async () => {
+    test('Seat taken by someone else', async () => {
         // prepare
 
         // test
         let taken = await backend.seatIsTaken({
-            table: "table-t",
-            seat: "1"
+            table: 'table-t',
+            seat: '1'
         });
         // assert
         expect(taken).toBe(true);
     });
 
-    test("Seat not taken by someone else", async () => {
+    test('Seat not taken by someone else', async () => {
         // prepare
 
         // test
         let taken = await backend.seatIsTaken({
-            table: "table-t",
-            seat: "2"
+            table: 'table-t',
+            seat: '2'
         });
         // assert
         expect(taken).toBe(false);
     });
 
     //seatIsTakenByRequester
-    test("Seat taken by requester", async () => {
+    test('Seat taken by requester', async () => {
         // prepare
 
         // test
         let taken = await backend.seatIsTakenByRequester({
-            table: "table-t",
-            seat: "3",
+            table: 'table-t',
+            seat: '3',
             customer: {
-                email_address: "test@gmail.com",
-                ticket_number: "123"
+                email_address: 'test@gmail.com',
+                ticket_number: '123'
             }
         });
         // assert
@@ -231,16 +235,16 @@ describe.skip("Unit tests", () => {
     });
 
     // seatIsTakenByRequester
-    test("Seat is not taken by requester", async () => {
+    test('Seat is not taken by requester', async () => {
         // prepare
 
         // test
         let taken = await backend.seatIsTakenByRequester({
-            table: "table-t",
-            seat: "3",
+            table: 'table-t',
+            seat: '3',
             customer: {
-                email_address: "test@gmail.com",
-                ticket_number: "1234"
+                email_address: 'test@gmail.com',
+                ticket_number: '1234'
             }
         });
         // assert
@@ -248,14 +252,14 @@ describe.skip("Unit tests", () => {
     });
 
     // assignSeat
-    test("Assign seat", async () => {
+    test('Assign seat', async () => {
         // prepare
         let seat = {
-            table: "table-t",
-            seat: "4",
+            table: 'table-t',
+            seat: '4',
             customer: {
-                email_address: "test@gmail.com",
-                ticket_number: "1234"
+                email_address: 'test@gmail.com',
+                ticket_number: '1234'
             }
         };
         // test
@@ -268,11 +272,11 @@ describe.skip("Unit tests", () => {
     });
 
     //numberOfSeats
-    test("Find number of seats", async () => {
+    test('Find number of seats', async () => {
         // prepare
         let customer = {
-            email_address: "test@gmail.com",
-            ticket_number: "1234"
+            email_address: 'test@gmail.com',
+            ticket_number: '1234'
         };
         // test
         let number = await backend.numberOfSeats(customer);
@@ -282,10 +286,10 @@ describe.skip("Unit tests", () => {
     });
 
     // getRequestersOldSeats
-    test("Get requesters old seats", async () => {
+    test('Get requesters old seats', async () => {
         // prepare
         let customer = {
-            ticket_number: "1234"
+            ticket_number: '1234'
         };
         // test
         let seats = await backend.getRequestersOldSeats(customer);
@@ -295,11 +299,11 @@ describe.skip("Unit tests", () => {
     });
 
     // makeSeatEmpty
-    test("Make seat empty", async () => {
+    test('Make seat empty', async () => {
         // prepare
         let seat = {
-            table: "table-t",
-            seat: "9"
+            table: 'table-t',
+            seat: '9'
         };
         // test
         await backend.makeSeatEmpty(seat);
@@ -310,13 +314,13 @@ describe.skip("Unit tests", () => {
     });
 
     // tallyCustomersSeatSelection
-    test("Make seat empty", async () => {
+    test('Make seat empty', async () => {
         // prepare
         let seat = {
-            table: "table-t",
-            seat: "9",
+            table: 'table-t',
+            seat: '9',
             customer: {
-                ticket_number: "1234"
+                ticket_number: '1234'
             }
         };
         // test
@@ -328,8 +332,8 @@ describe.skip("Unit tests", () => {
         // assert
         expect(data.seats.length).toBeGreaterThanOrEqual(1);
         expect(data.seats[data.seats.length - 1]).toEqual({
-            table: "table-t",
-            seat: "9"
+            table: 'table-t',
+            seat: '9'
         });
     });
 });

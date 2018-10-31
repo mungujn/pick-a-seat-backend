@@ -32,12 +32,13 @@ app.post('/check-seat-states', checkSeatStates);
  */
 async function pickASeat(request, response) {
     try {
+        log.start();
         log.info('Picking a seat');
         let seat = request.body;
-        seat['customer'].is_couple = getIsCouple(seat);
+        seat['customer'].is_couple = checkIfCouple(seat);
         seat['customer'].name = getName(seat);
         if (validateSeatData(seat) === true) {
-            let result = await backend.pickASeat(seat);
+            let result = await functions.pickASeat(seat);
             if (result === true) {
                 log.info(
                     `Successfuly picked seat ${seat.seat_number} from table ${
@@ -90,7 +91,7 @@ async function checkSeatStates(request, response) {
         log.start();
         log.info('Checking seat states');
         let table = request['body'].table;
-        let seats_states = await backend.checkSeatStates(table);
+        let seats_states = await functions.checkSeatStates(table);
         log.info('Succeded in checking seat states');
         log.info('-----------------------------------');
 
@@ -103,8 +104,12 @@ async function checkSeatStates(request, response) {
     }
 }
 
-// authenticate customer
-// assuming basic token based authentication.
+/**
+ * authenticate customer
+ * @param {*} request Express request object
+ * @param {*} response Express response object
+ * @param {*} next Function to call if auth passes
+ */
 function authenticateCustomer(request, response, next) {
     log.info('-----------Request-------------');
     log.info('Authenticating customer');
@@ -124,6 +129,11 @@ function authenticateCustomer(request, response, next) {
     }
 }
 
+/**
+ * Verify that the customer selecting a seat paid for it
+ * @param {string} email_address Customers email address
+ * @param {string} ticket_number Customers ticket number
+ */
 function verify(email_address, ticket_number) {
     for (let i = 0; i < AUTH_ARRAY.length; i++) {
         let pair = AUTH_ARRAY[i];
@@ -137,7 +147,11 @@ function verify(email_address, ticket_number) {
     return false;
 }
 
-function getIsCouple(seat) {
+/**
+ * Check if a seat selection request is from a customer that bought a couples ticket
+ * @param {*} seat Object containing seat details
+ */
+function checkIfCouple(seat) {
     let email_address = seat['customer'].email_address;
     let ticket_number = seat['customer'].ticket_number;
     for (let i = 0; i < AUTH_ARRAY.length; i++) {
@@ -154,6 +168,10 @@ function getIsCouple(seat) {
     return false;
 }
 
+/**
+ * Get the name of a customer associated with a particular seat
+ * @param {*} seat Seat object
+ */
 function getName(seat) {
     let email_address = seat['customer'].email_address;
     let ticket_number = seat['customer'].ticket_number;

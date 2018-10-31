@@ -1,11 +1,13 @@
 node_modules/
 coverage/
 .vscode/
+.env
+.gcloudignore
+production.yaml
+
 common/node_modules
 common/admin-scripts.js
-.env
 common/.env
 common/guests.csv
 common/guests.js
-.gcloudignore
-production.yaml
+common/package.json

@@ -1,17 +1,17 @@
-const backend = require('../backend');
-const common = require('../common-code/common');
+const functions = require('../functions');
+const db = require('../common/database');
 const request = require('supertest');
 const app = require('../app');
 
 jest.setTimeout(60000);
 
-describe('API', () => {
+describe('endpoint behaviour', () => {
     // Seat is empty and customer has not picked a seat yet
     // pickASeat
     test('Seat is empty and customer has not picked a seat yet', async () => {
         // prepare
-        await common.deleteData(`events/obuc-dinner/table-t/1`);
-        await common.deleteData(`events/obuc-dinner-tickets/1/seats`);
+        await db.deleteData(`events/event-name/table-t/1`);
+        await db.deleteData(`events/event-name-tickets/1/seats`);
         // test
         let response = await request(app)
             .post('/pick-a-seat')
@@ -33,11 +33,11 @@ describe('API', () => {
     //pickASeat
     test('seat is empty and customer has previously picked a seat', async () => {
         // prepare
-        await common.deleteData(`events/obuc-dinner/table-t/1`);
-        await common.createData(`events/obuc-dinner/table-t/2`, {
+        await db.deleteData(`events/obuc-dinner/table-t/1`);
+        await db.createData(`events/obuc-dinner/table-t/2`, {
             taken: true
         });
-        await common.createData(`events/obuc-dinner-tickets/1/seats`, {
+        await db.createData(`events/obuc-dinner-tickets/1/seats`, {
             number: 1,
             seats: [
                 {
@@ -59,14 +59,14 @@ describe('API', () => {
             });
 
         // assert
-        let data = await common.readData(`events/obuc-dinner-tickets/1/seats`);
+        let data = await db.readData(`events/obuc-dinner-tickets/1/seats`);
         expect(data.number).toEqual(1);
         expect(data.seats).toHaveLength(1);
         expect(data['seats'][0]).toEqual({
             table: 'table-t',
             seat: '1'
         });
-        let old_seat = await common.readData(`events/obuc-dinner/table-t/2`);
+        let old_seat = await db.readData(`events/obuc-dinner/table-t/2`);
         expect(old_seat.taken).toBe(false);
         let object = response['body'].message;
         expect(object).toBe(true);
@@ -76,8 +76,8 @@ describe('API', () => {
     // seat is empty and couple has picked no seats already
     test('Seat is empty and couple has picked no seats already', async () => {
         // prepare
-        await common.deleteData(`events/obuc-dinner/table-t/2`);
-        await common.deleteData(`events/obuc-dinner-tickets/2/seats`);
+        await db.deleteData(`events/obuc-dinner/table-t/2`);
+        await db.deleteData(`events/obuc-dinner-tickets/2/seats`);
         // test
         let response = await request(app)
             .post('/pick-a-seat')
@@ -100,8 +100,8 @@ describe('API', () => {
     // seat is empty and couple has picked 1 seat already
     test('seat is empty and couple has picked 1 seat already', async () => {
         // prepare
-        await common.deleteData(`events/obuc-dinner/table-t/3`);
-        await common.createData(`events/obuc-dinner-tickets/2/seats`, {
+        await db.deleteData(`events/obuc-dinner/table-t/3`);
+        await db.createData(`events/obuc-dinner-tickets/2/seats`, {
             number: 1,
             seats: [
                 {
@@ -125,7 +125,7 @@ describe('API', () => {
             });
 
         // assert
-        let data = await common.readData(`events/obuc-dinner-tickets/2/seats`);
+        let data = await db.readData(`events/obuc-dinner-tickets/2/seats`);
         expect(data['number']).toEqual(2);
         expect(data['seats'].length).toEqual(2);
         let object = response['body'].message;
@@ -135,8 +135,8 @@ describe('API', () => {
     // seat is empty and couple has picked 2 seats already
     test('seat is empty and couple has picked 2 seats already', async () => {
         // prepare
-        await common.deleteData(`events/obuc-dinner/table-t/4`);
-        await common.createData(`events/obuc-dinner-tickets/2/seats`, {
+        await db.deleteData(`events/obuc-dinner/table-t/4`);
+        await db.createData(`events/obuc-dinner-tickets/2/seats`, {
             number: 2,
             seats: [
                 {
@@ -162,7 +162,7 @@ describe('API', () => {
                 }
             });
         // assert
-        let data = await common.readData(`events/obuc-dinner-tickets/2/seats`);
+        let data = await db.readData(`events/obuc-dinner-tickets/2/seats`);
         expect(data['number']).toEqual(1);
         expect(data['seats'].length).toEqual(1);
         let object = response['body'].message;
@@ -186,18 +186,18 @@ describe('API', () => {
         expect(object.length).toBeGreaterThanOrEqual(3);
     });
 
-    afterAll('After all', ()=>{
-        process.exit()
+    afterAll('After all', () => {
+        process.exit();
     });
 });
 
 describe('Unit tests', () => {
     //seatIsTaken
-    test('Seat taken by someone else', async () => {
+    test.only('Seat taken by someone else', async () => {
         // prepare
 
         // test
-        let taken = await backend.seatIsTaken({
+        let taken = await functions.seatIsTaken({
             table: 'table-t',
             seat: '1'
         });
@@ -209,7 +209,7 @@ describe('Unit tests', () => {
         // prepare
 
         // test
-        let taken = await backend.seatIsTaken({
+        let taken = await functions.seatIsTaken({
             table: 'table-t',
             seat: '2'
         });
@@ -222,7 +222,7 @@ describe('Unit tests', () => {
         // prepare
 
         // test
-        let taken = await backend.seatIsTakenByRequester({
+        let taken = await functions.seatIsTakenByRequester({
             table: 'table-t',
             seat: '3',
             customer: {
@@ -239,7 +239,7 @@ describe('Unit tests', () => {
         // prepare
 
         // test
-        let taken = await backend.seatIsTakenByRequester({
+        let taken = await functions.seatIsTakenByRequester({
             table: 'table-t',
             seat: '3',
             customer: {
@@ -263,9 +263,9 @@ describe('Unit tests', () => {
             }
         };
         // test
-        let taken = await backend.assignSeat(seat);
+        let taken = await functions.assignSeat(seat);
 
-        let data = await common.readData(`events/obuc-dinner/table-t/4`);
+        let data = await db.readData(`events/obuc-dinner/table-t/4`);
 
         // assert
         expect(data).toEqual(seat);
@@ -279,7 +279,7 @@ describe('Unit tests', () => {
             ticket_number: '1234'
         };
         // test
-        let number = await backend.numberOfSeats(customer);
+        let number = await functions.numberOfSeats(customer);
 
         // assert
         expect(number).toEqual(2);
@@ -292,7 +292,7 @@ describe('Unit tests', () => {
             ticket_number: '1234'
         };
         // test
-        let seats = await backend.getRequestersOldSeats(customer);
+        let seats = await functions.getRequestersOldSeats(customer);
 
         // assert
         expect(seats.length).toEqual(2);
@@ -306,8 +306,8 @@ describe('Unit tests', () => {
             seat: '9'
         };
         // test
-        await backend.makeSeatEmpty(seat);
-        let data = await common.readData(`events/obuc-dinner/table-t/9`);
+        await functions.makeSeatEmpty(seat);
+        let data = await db.readData(`events/obuc-dinner/table-t/9`);
 
         // assert
         expect(data.taken).toBe(false);
@@ -324,10 +324,8 @@ describe('Unit tests', () => {
             }
         };
         // test
-        await backend.tallyCustomersSeatSelection(seat);
-        let data = await common.readData(
-            `events/obuc-dinner-tickets/1234/seats`
-        );
+        await functions.tallyCustomersSeatSelection(seat);
+        let data = await db.readData(`events/obuc-dinner-tickets/1234/seats`);
 
         // assert
         expect(data.seats.length).toBeGreaterThanOrEqual(1);

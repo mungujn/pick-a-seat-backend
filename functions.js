@@ -1,4 +1,3 @@
-const common = require('./common/functions');
 const utils = require('./common/utils');
 const log = require('./common/logger');
 const db = require('./common/database');

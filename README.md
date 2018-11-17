@@ -1,4 +1,4 @@
-# Pick a seat backend
+# Pick a seat backend (Node.js)
 
 [![Build Status](https://travis-ci.com/mungujn/pick-a-seat-backend.svg?branch=master)](https://travis-ci.com/mungujn/pick-a-seat-backend)
 
